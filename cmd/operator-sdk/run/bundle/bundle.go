@@ -37,10 +37,10 @@ func (c *BundleCmd) AddToFlagSet(fs *pflag.FlagSet) {
 func (c *BundleCmd) Run() error {
 
 	fmt.Println("Hello from bundle cmd")
-	fmt.Println(c.BundleImage)
-	fmt.Println(c.IndexImage)
-	fmt.Println(c.Namespace)
-	fmt.Println(c.InstallMode)
+	fmt.Printf("Bundle image is [%v]\n", c.BundleImage)
+	fmt.Printf("Index image is [%v]\n", c.IndexImage)
+	fmt.Printf("Namespace is [%v]\n", c.Namespace)
+	fmt.Printf("Install Mode is [%v]\n", c.InstallMode)
 	return nil
 }
 
