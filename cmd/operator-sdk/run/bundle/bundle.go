@@ -44,24 +44,23 @@ func (c *BundleCmd) Run() error {
 	return nil
 }
 
-func (c *BundleCmd) validate(args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("a bundle image is a required argument")
+func (c *BundleCmd) validate() cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return fmt.Errorf("a BUNDLE_IMAGE is a required argument")
+		}
+		return nil
 	}
-	return nil
 }
 
 func NewCmd() *cobra.Command {
 	c := &BundleCmd{}
 
 	cmd := &cobra.Command{
-		Use:   "bundle",
+		Use:   "bundle BUNDLE_IMAGE",
 		Short: "Run an Operator organized in bundle format with OLM",
+		Args:  c.validate(),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.validate(args); err != nil {
-				return fmt.Errorf("invalid command args: %v", err)
-			}
-
 			// assign the bundle image
 			c.BundleImage = args[0]
 
