@@ -41,6 +41,22 @@ func (c *BundleCmd) Run() error {
 	fmt.Printf("Index image is [%v]\n", c.IndexImage)
 	fmt.Printf("Namespace is [%v]\n", c.Namespace)
 	fmt.Printf("Install Mode is [%v]\n", c.InstallMode)
+
+	/*
+		 * create Pod spec for registryImage
+		 * image: = registryImage value
+		 * set entrypoint to be:
+			/bin/bash -c ‘ \
+				  /bin/mkdir -p /database && \
+				  /bin/opm registry add   -d /database/index.db -b {.BundleImage} && \
+				  /bin/opm registry serve -d /database/index.db’
+		 * IF pod fails, clean up and error out. Capture pod logs
+		 ---
+		 * Create GRPC CatalogSource, point to :50051
+		 * Create OperatorGroup (see note about installmode)
+		 * Create Subscription
+		 * Verify operator is installed
+	*/
 	return nil
 }
 
