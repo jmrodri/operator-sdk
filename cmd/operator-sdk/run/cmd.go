@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/run/bundle"
 	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/run/local"
 	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/run/packagemanifests"
 	olmcatalog "github.com/operator-framework/operator-sdk/internal/generate/olm-catalog"
@@ -59,11 +60,12 @@ type runCmd struct {
 	namespace string
 
 	// Run type.
-	olm, local bool
+	olm, local, bundle bool
 
 	// Run type-specific options.
-	olmArgs   olmoperator.PackageManifestsCmd
-	localArgs local.RunLocalCmd
+	olmArgs    olmoperator.PackageManifestsCmd
+	localArgs  local.RunLocalCmd
+	bundleArgs bundle.BundleCmd
 }
 
 // checkRunType ensures exactly one run type has been selected.
@@ -148,7 +150,7 @@ information on these subcommands.
 		"The file path to kubernetes configuration file. Defaults to location "+
 			"specified by $KUBECONFIG, or to default file rules if not set")
 	err := cmd.Flags().MarkDeprecated("kubeconfig",
-		"use --kubeconfig with 'local' or 'packagemanifests' subcommands instead")
+		"use --kubeconfig with 'local', 'packagemanifests', or 'bundle' subcommands instead")
 	if err != nil {
 		panic(err)
 	}
@@ -210,6 +212,7 @@ information on these subcommands.
 	cmd.AddCommand(
 		packagemanifests.NewCmd(),
 		local.NewCmd(),
+		bundle.NewCmd(),
 	)
 
 	return cmd
