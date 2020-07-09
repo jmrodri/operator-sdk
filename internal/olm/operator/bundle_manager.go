@@ -2,15 +2,15 @@ package olm
 
 import apimanifests "github.com/operator-framework/api/pkg/manifests"
 
-type bundleManager struct {
+type BundleManager struct {
 	*operatorManager
 
 	version string
 	bundles []*apimanifests.Bundle
 }
 
-func NewManager(version string) (*bundleManager, error) {
-	m := &bundleManager{
+func NewBundleManager(version string) (*BundleManager, error) {
+	m := &BundleManager{
 		version: version,
 	}
 
