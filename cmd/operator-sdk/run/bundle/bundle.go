@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	olm "github.com/operator-framework/operator-sdk/internal/olm/operator"
 	k8sinternal "github.com/operator-framework/operator-sdk/internal/util/k8sutil"
@@ -44,12 +45,16 @@ func (c *BundleCmd) Run() error {
 	fmt.Printf("Namespace is [%v]\n", c.Namespace)
 	fmt.Printf("Install Mode is [%v]\n", c.InstallMode)
 
-	m, err := olm.NewBundleManager("1.3", c.BundleImage, c.IndexImage, c.InstallMode)
+	m, err := olm.NewBundleManager("1.3", c.Namespace, c.BundleImage, c.IndexImage, c.InstallMode)
 	if err != nil {
 		fmt.Printf("error %v", err)
 	}
 
-	err := m.Run(context.TODO())
+	// TODO: consider reusing OperatorCmd
+	defaultTimeout := time.Minute * 2
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+	err = m.Run(ctx)
 	if err != nil {
 		fmt.Printf("error %v", err)
 	}
