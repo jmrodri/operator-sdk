@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewManager(t *testing.T) {
-	m, err := NewBundleManager("1.3")
+	m, err := NewBundleManager("1.3", "foons", "bundleImage", "", "OwnNamespace")
 	if err != nil {
 		t.Fatal()
 	}
