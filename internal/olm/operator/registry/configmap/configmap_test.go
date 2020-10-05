@@ -15,7 +15,6 @@ var _ = Describe("ConfigMap", func() {
 
 	Describe("Package manifest", func() {
 		It("Test", func() {
-			var e error
 			b := []*apimanifests.Bundle{
 				{
 					Name: "testbundle",
