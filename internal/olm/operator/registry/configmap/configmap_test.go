@@ -1,14 +1,13 @@
 package configmap
 
 import (
-	"fmt"
-
 	"github.com/blang/semver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/operator-framework/api/pkg/lib/version"
 	apimanifests "github.com/operator-framework/api/pkg/manifests"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+	"github.com/operator-framework/operator-sdk/internal/util/k8sutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -67,28 +66,19 @@ var _ = Describe("ConfigMap", func() {
 				},
 				DefaultChannelName: "test_channel_name",
 			}
-			// fmt.Printf("b has %v elements\n", len(b))
-			// for _, bundle := range b {
-			//     v := bundle.CSV.Spec.Version.String()
-			//     fmt.Printf("bundle ClusterServiceVersion %s has no version: %s\n", bundle.CSV.GetName(), v)
-			// }
-			// fmt.Println("Finished going through elements")
 
 			binaryDataByConfigMap, err := makeConfigMapsForPackageManifests(&p, b)
+			Expect(err).Should(BeNil())
 			val := make(map[string]map[string][]byte)
 			cmName := getRegistryConfigMapName(p.PackageName) + "-package"
 			val[cmName], err = makeObjectBinaryData(p)
-			// // Create Bundle ConfigMaps.
-			// for _, bundle := range b {
-			//     v := bundle.CSV.Spec.Version.String()
-			//     e = fmt.Errorf("bundle ClusterServiceVersion %s has no version", bundle.CSV.GetName())
-			//     // ConfigMap name containing the bundle's version.
-			//     cmName := getRegistryConfigMapName(p.PackageName) + "-" + k8sutil.FormatOperatorNameDNS1123(v)
-			//     binaryDataByConfigMap[cmName], err = makeBundleBinaryData(bundle)
-			// }
-			// fmt.Printf("%+v\n\n\n", binaryDataByConfigMap)
-			fmt.Printf("%+v", e)
-			// Expect(e).Should(BeNil())
+			// Create Bundle ConfigMaps.
+			for _, bundle := range b {
+				v := bundle.CSV.Spec.Version.String()
+				// ConfigMap name containing the bundle's version.
+				cmName := getRegistryConfigMapName(p.PackageName) + "-" + k8sutil.FormatOperatorNameDNS1123(v)
+				val[cmName], err = makeBundleBinaryData(bundle)
+			}
 			Expect(err).Should(BeNil())
 			Expect(binaryDataByConfigMap).Should(Equal(val))
 		})
