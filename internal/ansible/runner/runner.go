@@ -84,6 +84,9 @@ func playbookCmdFunc(path string) cmdFuncType {
 			cmdOptions = append(cmdOptions, ansibleVerbosityString(verbosity))
 		}
 
+		opts := strings.Join(cmdOptions, " ")
+		args := strings.Join(cmdArgs, " ")
+		log.Info(fmt.Sprintf("XXX playbookCmdFunc: ansible-runner %v %v", opts, args))
 		return exec.Command("ansible-runner", append(cmdOptions, cmdArgs...)...)
 	}
 }
@@ -113,6 +116,9 @@ func roleCmdFunc(path string) cmdFuncType {
 			cmdOptions = append(cmdOptions, "--role-skip-facts")
 		}
 
+		opts := strings.Join(cmdOptions, " ")
+		args := strings.Join(cmdArgs, " ")
+		log.Info(fmt.Sprintf("XXX roleCmdFunc: ansible-runner %v %v", opts, args))
 		return exec.Command("ansible-runner", append(cmdOptions, cmdArgs...)...)
 	}
 }

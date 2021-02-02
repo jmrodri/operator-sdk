@@ -82,6 +82,9 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 		"namespace", u.GetNamespace(),
 	)
 
+	logger.Info(fmt.Sprintf("XXX Reconcile requested on name %v in namespace %v", request.NamespacedName.Name, request.NamespacedName.Namespace))
+	logger.Info("XXX Get reconcile period")
+
 	reconcileResult := reconcile.Result{RequeueAfter: r.ReconcilePeriod}
 	if ds, ok := u.GetAnnotations()[ReconcilePeriodAnnotation]; ok {
 		duration, err := time.ParseDuration(ds)
@@ -95,9 +98,11 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 			logger.Error(err, "Unable to parse reconcile period annotation")
 			return reconcileResult, err
 		}
+		logger.Info(fmt.Sprintf("XXX Settign RequestAfter to [%v]", duration))
 		reconcileResult.RequeueAfter = duration
 	}
 
+	logger.Info("XXX getting finalizers")
 	deleted := u.GetDeletionTimestamp() != nil
 	finalizer, finalizerExists := r.Runner.GetFinalizer()
 	pendingFinalizers := u.GetFinalizers()
@@ -128,6 +133,7 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 		u.Object["spec"] = map[string]interface{}{}
 	}
 
+	logger.Info(fmt.Sprintf("XXX ManageStatus is [%v]", r.ManageStatus))
 	if r.ManageStatus {
 		errmark := r.markRunning(u, request.NamespacedName)
 		if errmark != nil {
@@ -143,6 +149,7 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 		UID:        u.GetUID(),
 	}
 
+	logger.Info("XXX creating kubeconfig")
 	kc, err := kubeconfig.Create(ownerRef, "http://localhost:8888", u.GetNamespace())
 	if err != nil {
 		errmark := r.markError(u, request.NamespacedName, "Unable to run reconciliation")
@@ -157,6 +164,8 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 			logger.Error(err, "Failed to remove generated kubeconfig file")
 		}
 	}()
+
+	logger.Info("XXX calling r.Runner.Run()")
 	result, err := r.Runner.Run(ident, u, kc.Name())
 	if err != nil {
 		errmark := r.markError(u, request.NamespacedName, "Unable to run reconciliation")
@@ -165,12 +174,15 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 		}
 		logger.Error(err, "Unable to run ansible runner")
 		return reconcileResult, err
+	} else {
+		logger.Info(fmt.Sprintf("XXX r.Runner.Run returned no error with this result [%v]", result))
 	}
 
 	// iterate events from ansible, looking for the final one
 	statusEvent := eventapi.StatusJobEvent{}
 	failureMessages := eventapi.FailureMessages{}
 	for event := range result.Events() {
+		logger.Info(fmt.Sprintf("XXX interating events: [%v]", event))
 		for _, eHandler := range r.EventHandlers {
 			go eHandler.Handle(ident, u, event)
 		}
@@ -209,13 +221,16 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 		}
 	}
 
+	logger.Info("XXX calling printEventStats")
 	// To print the stats of the task
 	printEventStats(statusEvent)
 
+	logger.Info("XXX calling printAnsibleResult")
 	// To print the full ansible result
 	r.printAnsibleResult(result)
 
 	if statusEvent.Event == "" {
+		logger.Info("XXX statusEvent.Event == \"\"")
 		eventErr := errors.New("did not receive playbook_on_stats event")
 		stdout, err := result.Stdout()
 		if err != nil {
@@ -232,11 +247,13 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 
 	// Need to get the unstructured object after the Ansible runner finishes.
 	// This needs to hit the API server to retrieve updates.
+	logger.Info("XXX calling APIReader.Get")
 	err = r.APIReader.Get(ctx, request.NamespacedName, u)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
+		logger.Error(err, "XXX APIReader.Get returned with an error")
 		return reconcile.Result{}, err
 	}
 
@@ -246,34 +263,45 @@ func (r *AnsibleOperatorReconciler) Reconcile(ctx context.Context, request recon
 	// We only want to update the CustomResource once, so we'll track changes
 	// and do it at the end
 	runSuccessful := len(failureMessages) == 0
+	logger.Info(fmt.Sprintf("XXX runSuccessful [%v]", runSuccessful))
 
+	logger.Info(fmt.Sprintf("XXX deleted [%v] finalizerExists [%v] runSuccessful [%v]", deleted, finalizerExists, runSuccessful))
 	// The finalizer has run successfully, time to remove it
 	if deleted && finalizerExists && runSuccessful {
 		finalizers := []string{}
+		logger.Info("XXX iterate pendingFinalizers")
 		for _, pendingFinalizer := range pendingFinalizers {
+			logger.Info(fmt.Sprintf("XXX pendingFinalizer [%v]", pendingFinalizer))
 			if pendingFinalizer != finalizer {
 				finalizers = append(finalizers, pendingFinalizer)
 			}
 		}
+		logger.Info(fmt.Sprintf("XXX finalizers [%v]", finalizers))
 		u.SetFinalizers(finalizers)
 		err := r.Client.Update(context.TODO(), u)
 		if err != nil {
+			logger.Info("XXX r.Client.Update FAILED to remove finalizer")
 			logger.Error(err, "Failed to remove finalizer")
 			return reconcileResult, err
 		}
 	}
 	if r.ManageStatus {
+		logger.Info("XXX r.ManageStatus is true on line 288")
 		errmark := r.markDone(u, request.NamespacedName, statusEvent, failureMessages)
 		if errmark != nil {
+			logger.Info("XXX there was an error marking status as done")
 			logger.Error(errmark, "Failed to mark status done")
 		}
 		// re-trigger reconcile because of failures
 		if !runSuccessful {
+			logger.Info("XXX re-trigger reconcile because of failures")
 			return reconcileResult, errors.New("event runner on failed")
 		}
+		logger.Info(fmt.Sprintf("XXX r.ManageStatus returning reconcileResult [%v] and err [%v]", reconcileResult, errmark))
 		return reconcileResult, errmark
 	}
 
+	logger.Info("XXX leaving Reconcile")
 	// re-trigger reconcile because of failures
 	if !runSuccessful {
 		return reconcileResult, errors.New("received failed task event")
