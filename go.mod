@@ -12,6 +12,7 @@ require (
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/operator-framework/api v0.8.1-0.20210414192051-b51286920978
+	github.com/operator-framework/java-operator-plugins v0.0.0-00010101000000-000000000000
 	github.com/operator-framework/operator-lib v0.4.0
 	github.com/operator-framework/operator-registry v1.15.3
 	github.com/prometheus/client_golang v1.7.1
@@ -48,6 +49,7 @@ replace (
 	// one of our direct dependencies begins using containerd v1.4.0+
 	github.com/containerd/containerd => github.com/containerd/containerd v1.4.3
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
+	github.com/operator-framework/java-operator-plugins => /home/devel/jesusr/dev/java-operator-plugins/
 	golang.org/x/text => golang.org/x/text v0.3.3 // Required to fix CVE-2020-14040
 )
 

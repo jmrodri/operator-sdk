@@ -15,6 +15,7 @@
 package cli
 
 import (
+	quarkusv1 "github.com/operator-framework/java-operator-plugins/pkg/quarkus/v1"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -97,6 +98,10 @@ func GetPluginsCLIAndRoot() (*cli.CLI, *cobra.Command) {
 		manifestsv2.Plugin{},
 		scorecardv2.Plugin{},
 	)
+	quarkusBundle, _ := plugin.NewBundle("quarkus"+plugins.DefaultNameQualifier, plugin.Version{Number: 1},
+		quarkusv1.Plugin{},
+		// manifestsv2.Plugin{},
+	)
 	c, err := cli.New(
 		cli.WithCommandName("operator-sdk"),
 		cli.WithVersion(makeVersionString()),
@@ -107,6 +112,7 @@ func GetPluginsCLIAndRoot() (*cli.CLI, *cobra.Command) {
 			helmBundle,
 			kustomizev1.Plugin{},
 			declarativev1.Plugin{},
+			quarkusBundle,
 		),
 		cli.WithDefaultPlugins(cfgv2.Version, gov2Bundle),
 		cli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),
