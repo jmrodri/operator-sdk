@@ -8,7 +8,7 @@ export IMAGE_VERSION = v1.5.0
 # Build-time variables to inject into binaries
 #PS1="[\u@\h \W\$(git branch 2> /dev/null | grep -e '\* ' | sed 's/^..\(.*\)/{\1}/')]\$ "
 export OLD_SIMPLE_VERSION = $(shell (test "$(shell git describe)" = "$(shell git describe --abbrev=0)" && echo $(shell git describe)) || echo $(shell git describe --abbrev=0)+git)
-export SIMPLE_VERSION = $(shell (test "$(shell git branch 2> /dev/null | grep -e '\* ' | sed 's/^..\(.*\)/\1/')" = "master") && echo "unknown" || $(OLD_SIMPLE_VERSION))
+export SIMPLE_VERSION = $(shell (test "$(shell git branch 2> /dev/null | grep -e '\* ' | sed 's/^..\(.*\)/\1/')" = "master") && echo "unknown" || echo $(OLD_SIMPLE_VERSION))
 
 #export SIMPLE_VERSION = $(shell (test "$(shell git describe)" = "$(shell git describe --abbrev=0)" && echo $(shell git describe)) || echo $(shell git describe --abbrev=0)+git)
 export GIT_VERSION = $(shell git describe --dirty --tags --always)
@@ -73,6 +73,7 @@ build: ## Build operator-sdk, ansible-operator, and helm-operator.
 .PHONY: build/operator-sdk build/ansible-operator build/helm-operator
 build/operator-sdk build/ansible-operator build/helm-operator:
 	echo $(SIMPLE_VERSION)
+	echo $(OLD_SIMPLE_VERSION)
 	go build $(GO_BUILD_ARGS) -o $(BUILD_DIR)/$(@F) ./cmd/$(@F)
 
 # Build scorecard binaries.
