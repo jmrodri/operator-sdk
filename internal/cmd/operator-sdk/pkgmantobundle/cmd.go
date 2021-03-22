@@ -68,7 +68,9 @@ func NewCmd() *cobra.Command {
 			// so we want to take the packagemanifestdir, verify it is a directory. Verify it has manifests in it.g
 			// for each directory we want to create a bundle from it.
 			//
-			// type WalkFunc func(path string, info fs.FileInfo, err error) error
+
+			// TODO: jmrodri
+			// THIS SHOULD ALL MOVE OUT OF THIS COMMAND
 			pkg, bundles, err := apimanifests.GetManifestsDir(c.packagemanifestdir)
 			if err != nil {
 				logrus.Errorf("Error getting packagemanifest: %v\n", err)
